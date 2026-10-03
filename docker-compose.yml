@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vantage_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vantage_admin
+      POSTGRES_PASSWORD: dev_secret_password
+      POSTGRES_DB: vantage_db
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    command: >
+      postgres 
+      -c shared_buffers=64MB 
+      -c work_mem=4MB 
+      -c max_connections=20
+
+  redis:
+    image: redis:7-alpine
+    container_name: vantage_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    command: redis-server --maxmemory 48mb --maxmemory-policy allkeys-lru
