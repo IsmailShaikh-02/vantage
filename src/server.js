@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
 import { credentialsRoutes } from './routes/credentials/credentials.routes.js';
+import { remediationsRoutes } from './routes/remediations/remediations.routes.js';
 
 dotenv.config();
 
@@ -10,6 +11,7 @@ const server = Fastify({
 
 // Register route plugins
 await server.register(credentialsRoutes);
+await server.register(remediationsRoutes);
 
 const start = async () => {
   try {
