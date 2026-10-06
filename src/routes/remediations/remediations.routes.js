@@ -31,22 +31,6 @@ export async function remediationsRoutes(fastify, options) {
     const { work_email, target_providers } = request.body;
     const initiatedBy = request.headers['x-actor'] || 'system_admin';
 
-    // STEP 1: Query deprovision_jobs for existing idempotency_key
-    
-    const result = await query(
-        `SELECT * FROM deprovision_jobs 
-        WHERE idempotency_key=$1`,
-        [idempotencyKey]
-    )
-    const deprov_data = result.rows[0]
-    if(result.rows.length > 0){
-        return reply.code(200).send({
-            job_id: deprov_data.id,
-            status: deprov_data.status,
-            poll_url: `/api/v1/remediations/jobs/${deprov_data.id}`
-        });
-    }
-
     // STEP 2: Query employees for work_email
 
     const result2 = await query(
@@ -61,6 +45,28 @@ export async function remediationsRoutes(fastify, options) {
         })
     }
     const employeeId = result2.rows[0].id
+
+    // STEP 1: Query deprovision_jobs for existing idempotency_key
+    
+    const result = await query(
+        `SELECT * FROM deprovision_jobs 
+        WHERE idempotency_key=$1`,
+        [idempotencyKey]
+    )
+    if(result.rows.length > 0){
+    const deprov_data = result.rows[0]
+      if(employeeId !== deprov_data.employee_id){
+        return reply.code(409).send({
+          error:'Idempotency key already in use for a different offboarding request'
+        })
+      }else{
+        return reply.code(200).send({
+            job_id: deprov_data.id,
+            status: deprov_data.status,
+            poll_url: `/api/v1/remediations/jobs/${deprov_data.id}`
+        });
+      }
+    }
 
     // STEP 3: Begin PostgreSQL transaction with client
     let jobId;
