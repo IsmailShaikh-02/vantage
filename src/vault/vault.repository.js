@@ -43,7 +43,6 @@ export async function getDecryptedCredential(provider) {
   const sql = `
     SELECT encrypted_secret, iv, auth_tag 
     FROM credentials_vault WHERE provider = $1;
-    -- TODO: SELECT encrypted_secret, iv, auth_tag FROM credentials_vault WHERE provider = $1
   `;
 
   // 2. Execute query and guard against non-existent provider records
